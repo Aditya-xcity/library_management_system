@@ -1,0 +1,5 @@
+101,Harry Potter and the Philosopher's Stone,J K Rowling,10,7
+102,The C Programming Language,Dennis Ritchie,5,5
+103,Introduction to Algorithms,Thomas H Cormen,8,6
+104,Operating System Concepts,Silberschatz,6,4
+105,Clean Code,Robert C Martin,4,4
