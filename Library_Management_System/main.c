@@ -55,6 +55,39 @@ void issue_book();
 void return_book();
 void view_issues();
 
+/* Helper function to trim newline characters */
+void trim_newline(char *str) {
+    size_t len = strlen(str);
+    if (len > 0 && str[len - 1] == '\n') {
+        str[len - 1] = '\0';
+    }
+}
+
+/* Safe input function for strings */
+void safe_input(char *buffer, int size) {
+    if (fgets(buffer, size, stdin) != NULL) {
+        trim_newline(buffer);
+    } else {
+        buffer[0] = '\0';
+    }
+}
+
+/* Safe integer input with validation */
+int safe_int_input(const char *prompt) {
+    char buffer[20];
+    int value;
+    
+    while (1) {
+        printf("%s", prompt);
+        safe_input(buffer, sizeof(buffer));
+        
+        if (sscanf(buffer, "%d", &value) == 1) {
+            return value;
+        }
+        printf("Invalid input. Please enter a valid integer.\n");
+    }
+}
+
 int main() {
     /* Aditya Bhardwaj - main start */
     load_data();
@@ -67,10 +100,11 @@ void load_data() {
     /* Aditya Bhardwaj - load_data start */
     FILE *file = fopen(FILENAME_BOOKS, "r");
     if (file != NULL) {
-        while (fscanf(file, "%d,%[^,],%[^,],%d,%d\n", 
+        while (book_count < MAX_BOOKS && 
+               fscanf(file, "%d,%99[^,],%49[^,],%d,%d\n", 
                       &books[book_count].id, books[book_count].title, 
                       books[book_count].author, &books[book_count].quantity, 
-                      &books[book_count].available) != EOF) {
+                      &books[book_count].available) == 5) {
             book_count++;
         }
         fclose(file);
@@ -78,9 +112,10 @@ void load_data() {
 
     file = fopen(FILENAME_USERS, "r");
     if (file != NULL) {
-        while (fscanf(file, "%d,%[^,],%[^\n]\n", 
+        while (user_count < MAX_USERS && 
+               fscanf(file, "%d,%49[^,],%49[^\n]\n", 
                       &users[user_count].id, users[user_count].name, 
-                      users[user_count].email) != EOF) {
+                      users[user_count].email) == 3) {
             user_count++;
         }
         fclose(file);
@@ -88,9 +123,10 @@ void load_data() {
 
     file = fopen(FILENAME_ISSUES, "r");
     if (file != NULL) {
-        while (fscanf(file, "%d,%d,%[^,],%[^\n]\n", 
+        while (issue_count < MAX_BOOKS && 
+               fscanf(file, "%d,%d,%19[^,],%19[^\n]\n", 
                       &issues[issue_count].book_id, &issues[issue_count].user_id, 
-                      issues[issue_count].issue_date, issues[issue_count].return_date) != EOF) {
+                      issues[issue_count].issue_date, issues[issue_count].return_date) == 4) {
             issue_count++;
         }
         fclose(file);
@@ -141,7 +177,10 @@ void main_menu() {
         printf("3. Issue/Return Management\n");
         printf("4. Exit\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        
+        char buffer[10];
+        safe_input(buffer, sizeof(buffer));
+        sscanf(buffer, "%d", &choice);
         
         switch (choice) {
             case 1:
@@ -176,7 +215,10 @@ void book_management() {
         printf("5. Delete Book\n");
         printf("6. Back to Main Menu\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        
+        char buffer[10];
+        safe_input(buffer, sizeof(buffer));
+        sscanf(buffer, "%d", &choice);
         
         switch (choice) {
             case 1:
@@ -212,7 +254,10 @@ void add_book() {
     
     Book new_book;
     printf("\nEnter Book ID: ");
-    scanf("%d", &new_book.id);
+    
+    char buffer[20];
+    safe_input(buffer, sizeof(buffer));
+    sscanf(buffer, "%d", &new_book.id);
     
     for (int i = 0; i < book_count; i++) {
         if (books[i].id == new_book.id) {
@@ -222,11 +267,15 @@ void add_book() {
     }
     
     printf("Enter Book Title: ");
-    scanf(" %[^\n]", new_book.title);
+    safe_input(new_book.title, sizeof(new_book.title));
+    
     printf("Enter Author: ");
-    scanf(" %[^\n]", new_book.author);
+    safe_input(new_book.author, sizeof(new_book.author));
+    
     printf("Enter Quantity: ");
-    scanf("%d", &new_book.quantity);
+    safe_input(buffer, sizeof(buffer));
+    sscanf(buffer, "%d", &new_book.quantity);
+    
     new_book.available = new_book.quantity;
     
     books[book_count++] = new_book;
@@ -265,12 +314,13 @@ void search_book() {
     printf("2. Search by Title\n");
     printf("3. Search by Author\n");
     printf("Enter your choice: ");
-    scanf("%d", &choice);
+    
+    char buffer[10];
+    safe_input(buffer, sizeof(buffer));
+    sscanf(buffer, "%d", &choice);
     
     if (choice == 1) {
-        int id;
-        printf("Enter Book ID: ");
-        scanf("%d", &id);
+        int id = safe_int_input("Enter Book ID: ");
         
         for (int i = 0; i < book_count; i++) {
             if (books[i].id == id) {
@@ -288,7 +338,7 @@ void search_book() {
     else if (choice == 2) {
         char title[100];
         printf("Enter Book Title: ");
-        scanf(" %[^\n]", title);
+        safe_input(title, sizeof(title));
         
         printf("\nSearch Results:\n");
         int found = 0;
@@ -306,7 +356,7 @@ void search_book() {
     else if (choice == 3) {
         char author[50];
         printf("Enter Author Name: ");
-        scanf(" %[^\n]", author);
+        safe_input(author, sizeof(author));
         
         printf("\nSearch Results:\n");
         int found = 0;
@@ -334,9 +384,7 @@ void update_book() {
         return;
     }
     
-    int id;
-    printf("Enter Book ID to update: ");
-    scanf("%d", &id);
+    int id = safe_int_input("Enter Book ID to update: ");
     
     for (int i = 0; i < book_count; i++) {
         if (books[i].id == id) {
@@ -351,26 +399,34 @@ void update_book() {
             
             char new_title[100];
             printf("New Title: ");
-            scanf(" %[^\n]", new_title);
+            safe_input(new_title, sizeof(new_title));
             if (strlen(new_title) > 0) {
                 strcpy(books[i].title, new_title);
             }
             
             char new_author[50];
             printf("New Author: ");
-            scanf(" %[^\n]", new_author);
+            safe_input(new_author, sizeof(new_author));
             if (strlen(new_author) > 0) {
                 strcpy(books[i].author, new_author);
             }
             
-            char quantity_str[10];
+            char quantity_str[20];
             printf("New Quantity: ");
-            scanf(" %[^\n]", quantity_str);
+            safe_input(quantity_str, sizeof(quantity_str));
             if (strlen(quantity_str) > 0) {
                 int new_quantity = atoi(quantity_str);
                 int difference = new_quantity - books[i].quantity;
                 books[i].quantity = new_quantity;
                 books[i].available += difference;
+                
+                /* Prevent available count from going negative */
+                if (books[i].available < 0) {
+                    books[i].available = 0;
+                }
+                if (books[i].available > books[i].quantity) {
+                    books[i].available = books[i].quantity;
+                }
             }
             
             printf("Book updated successfully!\n");
@@ -389,9 +445,7 @@ void delete_book() {
         return;
     }
     
-    int id;
-    printf("Enter Book ID to delete: ");
-    scanf("%d", &id);
+    int id = safe_int_input("Enter Book ID to delete: ");
     
     for (int i = 0; i < book_count; i++) {
         if (books[i].id == id) {
@@ -422,7 +476,10 @@ void user_management() {
         printf("2. View All Users\n");
         printf("3. Back to Main Menu\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        
+        char buffer[10];
+        safe_input(buffer, sizeof(buffer));
+        sscanf(buffer, "%d", &choice);
         
         switch (choice) {
             case 1:
@@ -449,7 +506,10 @@ void add_user() {
     
     User new_user;
     printf("\nEnter User ID: ");
-    scanf("%d", &new_user.id);
+    
+    char buffer[20];
+    safe_input(buffer, sizeof(buffer));
+    sscanf(buffer, "%d", &new_user.id);
     
     for (int i = 0; i < user_count; i++) {
         if (users[i].id == new_user.id) {
@@ -459,9 +519,10 @@ void add_user() {
     }
     
     printf("Enter User Name: ");
-    scanf(" %[^\n]", new_user.name);
+    safe_input(new_user.name, sizeof(new_user.name));
+    
     printf("Enter Email: ");
-    scanf(" %[^\n]", new_user.email);
+    safe_input(new_user.email, sizeof(new_user.email));
     
     users[user_count++] = new_user;
     printf("User added successfully!\n");
@@ -494,7 +555,10 @@ void issue_management() {
         printf("3. View All Issues\n");
         printf("4. Back to Main Menu\n");
         printf("Enter your choice: ");
-        scanf("%d", &choice);
+        
+        char buffer[10];
+        safe_input(buffer, sizeof(buffer));
+        sscanf(buffer, "%d", &choice);
         
         switch (choice) {
             case 1:
@@ -522,9 +586,7 @@ void issue_book() {
         return;
     }
     
-    int book_id, user_id;
-    printf("\nEnter Book ID to issue: ");
-    scanf("%d", &book_id);
+    int book_id = safe_int_input("\nEnter Book ID to issue: ");
     
     int book_index = -1;
     for (int i = 0; i < book_count; i++) {
@@ -544,8 +606,7 @@ void issue_book() {
         return;
     }
     
-    printf("Enter User ID: ");
-    scanf("%d", &user_id);
+    int user_id = safe_int_input("Enter User ID: ");
     
     int user_index = -1;
     for (int i = 0; i < user_count; i++) {
@@ -568,9 +629,15 @@ void issue_book() {
         }
     }
     
+    /* Check array bounds before adding new issue */
+    if (issue_count >= MAX_BOOKS) {
+        printf("Maximum issue capacity reached!\n");
+        return;
+    }
+    
     char issue_date[20];
     printf("Enter Issue Date (DD-MM-YYYY): ");
-    scanf("%s", issue_date);
+    safe_input(issue_date, sizeof(issue_date));
     
     issues[issue_count].book_id = book_id;
     issues[issue_count].user_id = user_id;
@@ -592,11 +659,8 @@ void return_book() {
         return;
     }
     
-    int book_id, user_id;
-    printf("\nEnter Book ID to return: ");
-    scanf("%d", &book_id);
-    printf("Enter User ID: ");
-    scanf("%d", &user_id);
+    int book_id = safe_int_input("\nEnter Book ID to return: ");
+    int user_id = safe_int_input("Enter User ID: ");
     
     int issue_index = -1;
     for (int i = 0; i < issue_count; i++) {
@@ -614,13 +678,18 @@ void return_book() {
     
     char return_date[20];
     printf("Enter Return Date (DD-MM-YYYY): ");
-    scanf("%s", return_date);
+    safe_input(return_date, sizeof(return_date));
     
     strcpy(issues[issue_index].return_date, return_date);
     
     for (int i = 0; i < book_count; i++) {
         if (books[i].id == book_id) {
             books[i].available++;
+            
+            /* Ensure available count doesn't exceed total quantity */
+            if (books[i].available > books[i].quantity) {
+                books[i].available = books[i].quantity;
+            }
             break;
         }
     }
