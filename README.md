@@ -6,7 +6,7 @@ This project demonstrates strong fundamentals of **C programming**, **data struc
 
 ---
 
-##Demo
+## Demo
 
 ![Demo](Library_Management_System/Demo/Demo.JPG)
 
@@ -132,4 +132,5 @@ B.Tech (CSE)
 ## 📜 License
 
 This project is created for **educational purposes**. Feel free to fork, modify, and learn from it.
+
 
